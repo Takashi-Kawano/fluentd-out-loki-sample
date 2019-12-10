@@ -1,0 +1,37 @@
+version: "3"
+networks:
+  loki:
+services:
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - loki
+
+  grafana:
+    image: grafana/grafana:master
+    ports:
+      - "3000:3000"
+    networks:
+      - loki
+
+  fluentd:
+    image: fluent/fluentd
+    environment:
+      FLUENT_CONF: /fluentd/etc/fluent.conf
+    networks:
+      - loki
+    volumes:
+      - ./host_logs:/var/log
+      - ./fluent.conf:/fluentd/etc/fluent.conf
+      - ./plugin:/etc/fluent/plugin
+
+  nginx:
+    image: nginx
+    volumes:
+      - ./host_logs:/var/log/nginx
+    ports:
+      - "8080:80"
